@@ -45,7 +45,14 @@ _ACTIVE = {}          # download_id -> control dict
 _NEXT_ID = 1
 _ID_LOCK = threading.Lock()
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
+
+
+def _ytdlp_version():
+    try:
+        return yt_dlp.version.__version__
+    except Exception:
+        return None
 
 
 def _ffmpeg_location():
@@ -363,7 +370,7 @@ def cancel(did):
 # --------------------------------------------------------------------------- #
 
 METHODS = {
-    "ping": lambda p: {"pong": True, "version": VERSION, "ffmpeg": bool(_ffmpeg_location())},
+    "ping": lambda p: {"pong": True, "version": VERSION, "ytdlp": _ytdlp_version(), "ffmpeg": bool(_ffmpeg_location())},
     "analyze": lambda p: analyze(p["url"]),
     "download": lambda p: start_download(p["options"]),
     "pause": lambda p: pause(p["download_id"]),
@@ -373,7 +380,7 @@ METHODS = {
 
 
 def main():
-    _emit({"event": "ready", "data": {"version": VERSION, "ffmpeg": bool(_ffmpeg_location())}})
+    _emit({"event": "ready", "data": {"version": VERSION, "ytdlp": _ytdlp_version(), "ffmpeg": bool(_ffmpeg_location())}})
     for line in sys.stdin:
         line = line.strip()
         if not line:

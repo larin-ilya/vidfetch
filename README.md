@@ -69,14 +69,14 @@ vidfetch/
 ## Требования для разработки
 
 - Node.js ≥ 20, npm
-- Python ≥ 3.10 с `yt-dlp` (`pip install -r engine/requirements.txt`)
+- Python ≥ 3.10 с `yt-dlp` **nightly** (`pip install -r engine/requirements.txt` — файл включает `--pre`, т.е. nightly-сборку с актуальными фиксами для YouTube)
 - ffmpeg (бинарник в `build/ffmpeg/`; приложение само находит его)
 
 ## Запуск (dev)
 
 ```bash
 npm install
-python -m pip install -r engine/requirements.txt
+python -m pip install -U --pre yt-dlp   # nightly (актуальные фиксы YouTube)
 npm start
 ```
 

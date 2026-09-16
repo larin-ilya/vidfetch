@@ -39,3 +39,10 @@
   - `VidFetch-1.0.0-setup-win-x64.exe`
   (SHA256 в теле релиза: `https://github.com/larin-ilya/vidfetch/releases/tag/v1.0.0`).
 - **[веха M6] Передача.** README / PLAN / LEDGER / HANDOVER готовы.
+
+## 2026-09-16 (fix)
+
+- **[исправление] yt-dlp nightly.** Стабильная `2025.12.08` устарела — YouTube не качал.
+  Установлен nightly `2026.08.30.232658` (`pip install -U --pre yt-dlp`), движок перезаморожен
+  и проверен; `ping`/`ready` теперь возвращают версию yt-dlp. Версия приложения 1.0.1,
+  пересобраны Windows-бинарики, опубликован релиз v1.0.1.

@@ -1,6 +1,6 @@
 {
   "name": "vidfetch",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Minimal, fast video & audio downloader for Windows and Linux.",
   "main": "electron/main.js",
   "author": "larin-ilya",
