@@ -1,0 +1,27 @@
+# Node / Electron
+node_modules/
+dist/
+out/
+release/
+
+# Python
+__pycache__/
+*.pyc
+build/
+*.spec
+
+# Bundled binaries (downloaded at build time, not committed)
+build/ffmpeg/
+build/engine/
+engine/build/
+engine/dist/
+
+# Local state
+.DS_Store
+Thumbs.db
+*.log
+
+# Secrets — never commit tokens
+ghp_for_push.txt
+.env
+*.pem
