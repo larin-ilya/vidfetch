@@ -97,13 +97,28 @@ class HistoryViewModel(app: Application) : AndroidViewModel(app) {
 
 class SettingsViewModel(app: Application) : AndroidViewModel(app) {
     private val settings = (app as VidFetchApp).settings
+    private val repo = (app as VidFetchApp).repository
     val theme: StateFlow<ThemeMode> = settings.theme
     val language: StateFlow<String> = settings.language
     val folder: StateFlow<String> = settings.folder
     val maxConcurrent: StateFlow<Int> = settings.maxConcurrent
 
+    var exportResult by mutableStateOf<String?>(null)
+        private set
+
     fun setTheme(mode: ThemeMode) = settings.setTheme(mode)
     fun setLanguage(value: String) = settings.setLanguage(value)
     fun setFolder(value: String) = settings.setFolder(value)
     fun setMaxConcurrent(value: Int) = settings.setMaxConcurrent(value)
+
+    fun export() {
+        viewModelScope.launch {
+            exportResult = try {
+                val f = repo.exportCsv(getApplication())
+                "Сохранено: ${f.name} · записей: ${repo.all().size}"
+            } catch (e: Exception) {
+                "Ошибка экспорта: ${e.message ?: e.javaClass.simpleName}"
+            }
+        }
+    }
 }

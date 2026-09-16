@@ -261,6 +261,8 @@ fun SettingsScreen(vm: SettingsViewModel = viewModel()) {
         onTheme = vm::setTheme,
         onLanguage = vm::setLanguage,
         onConcurrent = vm::setMaxConcurrent,
+        onExport = vm::export,
+        exportResult = vm.exportResult,
     )
 }
 
@@ -274,6 +276,8 @@ fun SettingsContent(
     onTheme: (ThemeMode) -> Unit,
     onLanguage: (String) -> Unit,
     onConcurrent: (Int) -> Unit,
+    onExport: () -> Unit = {},
+    exportResult: String? = null,
 ) {
     Column(Modifier.fillMaxSize()) {
         ScreenHeader("Настройки")
@@ -317,6 +321,25 @@ fun SettingsContent(
                     listOf("Русский", "English").forEach { lang ->
                         FilterChip(selected = language == lang, onClick = { onLanguage(lang) }, label = { Text(lang) })
                     }
+                }
+            }
+
+            SectionTitle("Журнал")
+            SettingsCard {
+                Text(
+                    "Выгрузка всех записей о загрузках в CSV-файл.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(10.dp))
+                Button(onClick = onExport, shape = MaterialTheme.shapes.medium) {
+                    Icon(Icons.Filled.Download, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Экспортировать журнал")
+                }
+                if (exportResult != null) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(exportResult, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
 

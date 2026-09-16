@@ -1,6 +1,8 @@
 package app.vidfetch.mobile.data
 
+import android.content.Context
 import kotlinx.coroutines.flow.Flow
+import java.io.File
 
 class DownloadRepository(
     private val dao: DownloadDao,
@@ -40,4 +42,19 @@ class DownloadRepository(
     suspend fun delete(id: Long) = dao.deleteById(id)
 
     suspend fun all(): List<DownloadEntity> = dao.all()
+
+    /** Exports the whole download journal ("admin" export) to a CSV file. */
+    suspend fun exportCsv(context: Context): File {
+        val dir = File(context.getExternalFilesDir(null), "exports").apply { mkdirs() }
+        val file = File(dir, "downloads_${System.currentTimeMillis()}.csv")
+        val rows = dao.all()
+        file.bufferedWriter().use { w ->
+            w.write("id,title,kind,fileName,status,totalBytes,downloadedBytes,url,createdAt\n")
+            rows.forEach { e ->
+                val title = e.title.replace("\"", "'")
+                w.write("${e.id},\"$title\",${e.kind},${e.fileName},${e.status},${e.totalBytes},${e.downloadedBytes},\"${e.url}\",${e.createdAt}\n")
+            }
+        }
+        return file
+    }
 }
