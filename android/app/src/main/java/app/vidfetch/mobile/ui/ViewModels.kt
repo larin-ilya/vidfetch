@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.vidfetch.mobile.VidFetchApp
+import app.vidfetch.mobile.data.LinkAnalyzer
 import app.vidfetch.mobile.data.ThemeMode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
@@ -15,10 +16,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.net.HttpURLConnection
-import java.net.URL
-
-private data class HeadMeta(val title: String, val size: Long, val kind: String)
 
 class HomeViewModel(app: Application) : AndroidViewModel(app) {
     private val repo = (app as VidFetchApp).repository
@@ -33,22 +30,31 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         if (state is HomeState.Error) state = HomeState.Idle
     }
 
-    fun demoUrl() {
-        url = "https://download.samplelib.com/mp3/sample-6s.mp3"
+    fun example() {
+        url = "https://www.w3schools.com/html/mov_bbb.mp4"
         state = HomeState.Idle
     }
 
     fun analyze() {
         val target = url.trim()
-        if (!target.startsWith("http://") && !target.startsWith("https://")) {
-            state = HomeState.Error("Вставьте прямую ссылку http(s):// на файл")
+        if (target.isBlank()) {
+            state = HomeState.Error("Вставьте ссылку")
             return
         }
         state = HomeState.Loading
         viewModelScope.launch {
             try {
-                val meta = withContext(Dispatchers.IO) { head(target) }
-                state = HomeState.Ready(meta.title, meta.kind, if (meta.size > 0) humanBytes(meta.size) else "размер неизвестен")
+                val info = withContext(Dispatchers.IO) { LinkAnalyzer.analyze(target) }
+                url = info.url
+                state = if (info.kind == "page") {
+                    HomeState.Error("Это веб-страница, а не файл. Нужна прямая ссылка на файл (mp4, mp3, …).")
+                } else {
+                    HomeState.Ready(
+                        title = info.title,
+                        kind = info.kind,
+                        sizeText = if (info.totalBytes > 0) humanBytes(info.totalBytes) else "размер неизвестен",
+                    )
+                }
             } catch (e: Exception) {
                 state = HomeState.Error("Не удалось прочитать ссылку: ${e.message ?: e.javaClass.simpleName}")
             }
@@ -58,31 +64,11 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
     fun startDownload() {
         val ready = state as? HomeState.Ready ?: return
         val target = url.trim()
-        val fileName = target.substringAfterLast('/').substringBefore('?').ifBlank { "video_${System.currentTimeMillis()}" }
+        val fileName = target.substringAfterLast('/').substringBefore('?').ifBlank { "file_${System.currentTimeMillis()}" }
         viewModelScope.launch {
             repo.enqueue(target, ready.title, ready.kind, fileName)
             state = HomeState.Idle
         }
-    }
-
-    fun reset() {
-        state = HomeState.Idle
-    }
-
-    private fun head(u: String): HeadMeta {
-        val c = (URL(u).openConnection() as HttpURLConnection).apply {
-            requestMethod = "HEAD"
-            connectTimeout = 10_000
-            readTimeout = 10_000
-            instanceFollowRedirects = true
-            setRequestProperty("User-Agent", "Mozilla/5.0 (Android) VidFetch/1.1")
-        }
-        c.connect()
-        val len = c.contentLengthLong
-        val type = c.contentType ?: ""
-        val name = u.substringAfterLast('/').substringBefore('?').ifBlank { "Файл" }
-        val kind = if (type.startsWith("audio") || name.endsWith(".mp3") || name.endsWith(".m4a")) "audio" else "video"
-        return HeadMeta(name, len, kind)
     }
 }
 

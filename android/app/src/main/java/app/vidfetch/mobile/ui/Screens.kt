@@ -1,5 +1,6 @@
 package app.vidfetch.mobile.ui
 
+import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,11 +37,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.vidfetch.mobile.data.ThemeMode
@@ -49,14 +52,19 @@ import app.vidfetch.mobile.ui.theme.Warn
 
 @Composable
 fun HomeScreen(vm: HomeViewModel = viewModel()) {
+    val context = LocalContext.current
     HomeContent(
         url = vm.url,
         state = vm.state,
         onUrl = vm::onUrl,
-        onAnalyze = vm::analyze,
-        onDemo = vm::demoUrl,
+        onPaste = {
+            val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+            val text = cm.primaryClip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.text?.toString()
+            if (!text.isNullOrBlank()) vm.onUrl(text.trim())
+        },
+        onExample = vm::example,
+        onCheck = vm::analyze,
         onStart = vm::startDownload,
-        onReset = vm::reset,
     )
 }
 
@@ -66,10 +74,10 @@ fun HomeContent(
     url: String,
     state: HomeState,
     onUrl: (String) -> Unit,
-    onAnalyze: () -> Unit,
-    onDemo: () -> Unit,
+    onPaste: () -> Unit,
+    onExample: () -> Unit,
+    onCheck: () -> Unit,
     onStart: () -> Unit,
-    onReset: () -> Unit,
 ) {
     Column(Modifier.fillMaxSize()) {
         ScreenHeader("VidFetch")
@@ -96,17 +104,18 @@ fun HomeContent(
                 shape = MaterialTheme.shapes.medium,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(onClick = onDemo, modifier = Modifier.weight(1f), shape = MaterialTheme.shapes.medium) {
+                OutlinedButton(onClick = onPaste, modifier = Modifier.weight(1f), shape = MaterialTheme.shapes.medium) {
                     Icon(Icons.Filled.ContentPaste, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Пример")
+                    Text("Вставить")
                 }
-                Button(onClick = onAnalyze, modifier = Modifier.weight(1f), shape = MaterialTheme.shapes.medium) {
+                Button(onClick = onCheck, modifier = Modifier.weight(1f), shape = MaterialTheme.shapes.medium) {
                     Icon(Icons.Filled.Download, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
                     Text("Проверить")
                 }
             }
+            TextButton(onClick = onExample) { Text("Пример ссылки") }
 
             when (state) {
                 is HomeState.Idle -> StatusPill("Готово", Ok)
